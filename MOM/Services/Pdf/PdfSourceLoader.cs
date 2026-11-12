@@ -7,8 +7,9 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using MOM.Common;
 
-namespace MOM.Services
+namespace MOM.Services.Pdf
 {
     /// <summary>
     /// PDF 内容来源：http/https 下载，或服务器本地/共享路径读取。
@@ -46,7 +47,7 @@ namespace MOM.Services
             }
             catch (Exception ex)
             {
-                throw new PdfParseException(PdfErrorCodes.InvalidArgument, "文件路径格式不正确：" + path, ex);
+                throw new ApiException(ApiErrorCode.InvalidArgument, "文件路径格式不正确：" + path, ex);
             }
 
             if (!File.Exists(fullPath))
@@ -60,16 +61,16 @@ namespace MOM.Services
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    throw new PdfParseException(
-                        PdfErrorCodes.FileAccessDenied,
+                    throw new ApiException(
+                        ApiErrorCode.FileAccessDenied,
                         "没有权限读取该文件，请给 IIS 应用程序池账号授予目录读取权限：" + fullPath,
                         ex);
                 }
                 catch (DirectoryNotFoundException ex)
                 {
-                    throw new PdfParseException(
-                        PdfErrorCodes.FileNotFound,
-                        "文件所在目录不存在：" + fullPath + "（url 里的本地路径必须是 API 服务器上的文件；调用方电脑上的文件请改用上传接口）",
+                    throw new ApiException(
+                        ApiErrorCode.FileNotFound,
+                        "文件所在目录不存在：" + fullPath + "（url 里的本地路径必须是 API 服务器上的文件；调用方电脑上的文件请先放到服务器可访问的位置）",
                         ex);
                 }
                 catch (IOException)
@@ -77,9 +78,9 @@ namespace MOM.Services
                     // 其他 IO 原因，按不存在处理
                 }
 
-                throw new PdfParseException(
-                    PdfErrorCodes.FileNotFound,
-                    "文件不存在：" + fullPath + "（url 里的本地路径必须是 API 服务器上的文件；调用方电脑上的文件请改用上传接口）");
+                throw new ApiException(
+                    ApiErrorCode.FileNotFound,
+                    "文件不存在：" + fullPath + "（url 里的本地路径必须是 API 服务器上的文件；调用方电脑上的文件请先放到服务器可访问的位置）");
             }
 
             var file = new FileInfo(fullPath);
@@ -95,19 +96,19 @@ namespace MOM.Services
             }
             catch (UnauthorizedAccessException ex)
             {
-                throw new PdfParseException(
-                    PdfErrorCodes.FileAccessDenied,
+                throw new ApiException(
+                    ApiErrorCode.FileAccessDenied,
                     "没有权限读取该文件，请给 IIS 应用程序池账号授予目录读取权限：" + fullPath,
                     ex);
             }
             catch (IOException ex)
             {
-                throw new PdfParseException(
-                    PdfErrorCodes.FileAccessDenied, "读取文件失败（文件可能被占用或权限不足）：" + fullPath, ex);
+                throw new ApiException(
+                    ApiErrorCode.FileAccessDenied, "读取文件失败（文件可能被占用或权限不足）：" + fullPath, ex);
             }
             if (content.Length == 0)
             {
-                throw new PdfParseException(PdfErrorCodes.InvalidPdf, "文件内容为空：" + fullPath);
+                throw new ApiException(ApiErrorCode.InvalidPdf, "文件内容为空：" + fullPath);
             }
 
             return content;
@@ -118,7 +119,7 @@ namespace MOM.Services
             Uri current;
             if (!Uri.TryCreate(url, UriKind.Absolute, out current))
             {
-                throw new PdfParseException(PdfErrorCodes.InvalidArgument, "PDF 地址格式不正确。");
+                throw new ApiException(ApiErrorCode.InvalidArgument, "PDF 地址格式不正确。");
             }
 
             for (int hop = 0; hop <= MaxRedirects; hop++)
@@ -138,14 +139,14 @@ namespace MOM.Services
                     }
                     catch (OperationCanceledException ex)
                     {
-                        throw new PdfParseException(
-                            PdfErrorCodes.Timeout,
+                        throw new ApiException(
+                            ApiErrorCode.UpstreamTimeout,
                             string.Format(CultureInfo.InvariantCulture, "下载 PDF 超时（{0:0} 秒）。", timeout.TotalSeconds),
                             ex);
                     }
                     catch (HttpRequestException ex)
                     {
-                        throw new PdfParseException(PdfErrorCodes.DownloadFailed, "下载 PDF 失败：" + ex.Message, ex);
+                        throw new ApiException(ApiErrorCode.UpstreamError, "下载 PDF 失败：" + ex.Message, ex);
                     }
 
                     using (response)
@@ -155,7 +156,7 @@ namespace MOM.Services
                             Uri location = ResolveRedirectLocation(response, current);
                             if (location == null)
                             {
-                                throw new PdfParseException(PdfErrorCodes.DownloadFailed, "远程服务器返回了无效的重定向地址。");
+                                throw new ApiException(ApiErrorCode.UpstreamError, "远程服务器返回了无效的重定向地址。");
                             }
 
                             current = location;
@@ -164,8 +165,8 @@ namespace MOM.Services
 
                         if (!response.IsSuccessStatusCode)
                         {
-                            throw new PdfParseException(
-                                PdfErrorCodes.DownloadFailed,
+                            throw new ApiException(
+                                ApiErrorCode.UpstreamError,
                                 string.Format(
                                     CultureInfo.InvariantCulture,
                                     "下载 PDF 失败，远程服务器返回 {0} {1}。",
@@ -198,7 +199,7 @@ namespace MOM.Services
 
                             if (buffer.Length == 0)
                             {
-                                throw new PdfParseException(PdfErrorCodes.InvalidPdf, "远程地址返回了空内容。");
+                                throw new ApiException(ApiErrorCode.InvalidPdf, "远程地址返回了空内容。");
                             }
 
                             return buffer.ToArray();
@@ -207,7 +208,7 @@ namespace MOM.Services
                 }
             }
 
-            throw new PdfParseException(PdfErrorCodes.DownloadFailed, "PDF 地址重定向次数过多。");
+            throw new ApiException(ApiErrorCode.UpstreamError, "PDF 地址重定向次数过多。");
         }
 
         /// <summary>
@@ -219,12 +220,12 @@ namespace MOM.Services
             bool isHttps = string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
             if (!isHttp && !isHttps)
             {
-                throw new PdfParseException(PdfErrorCodes.InvalidArgument, "只支持 http 或 https 协议的 PDF 地址。");
+                throw new ApiException(ApiErrorCode.InvalidArgument, "只支持 http 或 https 协议的 PDF 地址。");
             }
 
             if (!string.IsNullOrEmpty(uri.UserInfo))
             {
-                throw new PdfParseException(PdfErrorCodes.InvalidArgument, "PDF 地址中不能包含用户名或密码。");
+                throw new ApiException(ApiErrorCode.InvalidArgument, "PDF 地址中不能包含用户名或密码。");
             }
 
             if (allowPrivateNetwork)
@@ -246,22 +247,22 @@ namespace MOM.Services
                 }
                 catch (SocketException ex)
                 {
-                    throw new PdfParseException(
-                        PdfErrorCodes.DownloadFailed, "无法解析 PDF 地址的主机名：" + uri.Host, ex);
+                    throw new ApiException(
+                        ApiErrorCode.UpstreamError, "无法解析 PDF 地址的主机名：" + uri.Host, ex);
                 }
             }
 
             if (addresses.Length == 0)
             {
-                throw new PdfParseException(PdfErrorCodes.DownloadFailed, "PDF 地址的主机名没有解析到任何 IP 地址。");
+                throw new ApiException(ApiErrorCode.UpstreamError, "PDF 地址的主机名没有解析到任何 IP 地址。");
             }
 
             foreach (IPAddress address in addresses)
             {
                 if (IsPrivateAddress(address))
                 {
-                    throw new PdfParseException(
-                        PdfErrorCodes.InvalidArgument,
+                    throw new ApiException(
+                        ApiErrorCode.InvalidArgument,
                         "出于安全考虑，不允许下载内网或回环地址上的 PDF：" + uri.Host);
                 }
             }
@@ -328,10 +329,10 @@ namespace MOM.Services
             return location.IsAbsoluteUri ? location : new Uri(requestUri, location);
         }
 
-        private static PdfParseException TooLarge(long maxBytes)
+        private static ApiException TooLarge(long maxBytes)
         {
-            return new PdfParseException(
-                PdfErrorCodes.TooLarge,
+            return new ApiException(
+                ApiErrorCode.FileTooLarge,
                 string.Format(
                     CultureInfo.InvariantCulture,
                     "PDF 文件超过大小限制（{0} MB）。",

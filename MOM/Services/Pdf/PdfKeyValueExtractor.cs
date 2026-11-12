@@ -1,6 +1,5 @@
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
-using MOM.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MOM.Services
+namespace MOM.Services.Pdf
 {
     /// <summary>
     /// 证书/表单类 PDF 的“标签 -> 值”提取。

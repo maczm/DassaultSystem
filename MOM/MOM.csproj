@@ -34,6 +34,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\MOM.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,6 +45,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\MOM.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="itextsharp, Version=5.5.13.0, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
@@ -54,6 +58,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Swashbuckle.Core">
+      <HintPath>..\packages\Swashbuckle.Core.5.6.0\lib\net40\Swashbuckle.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
@@ -86,20 +93,35 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
-    <Compile Include="Controllers\PdfParseController.cs" />
+    <Compile Include="Common\ApiErrorCode.cs" />
+    <Compile Include="Common\ApiException.cs" />
+    <Compile Include="Controllers\ApiControllerBase.cs" />
+    <Compile Include="Controllers\PdfController.cs" />
+    <Compile Include="Controllers\TextController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\PdfKeyValuePair.cs" />
+    <Compile Include="Models\PdfParseRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\PdfContentTextReader.cs" />
-    <Compile Include="Services\PdfKeyValueExtractor.cs" />
-    <Compile Include="Services\PdfTextToken.cs" />
-    <Compile Include="Services\PdfParseException.cs" />
-    <Compile Include="Services\PdfSourceLoader.cs" />
+    <Compile Include="Services\Pdf\PdfCellRect.cs" />
+    <Compile Include="Services\Pdf\PdfContentLayout.cs" />
+    <Compile Include="Services\Pdf\PdfContentTextReader.cs" />
+    <Compile Include="Services\Pdf\PdfDocumentParser.cs" />
+    <Compile Include="Services\Pdf\PdfKeyValueExtractor.cs" />
+    <Compile Include="Services\Pdf\PdfKeyValuePair.cs" />
+    <Compile Include="Services\Pdf\PdfParseService.cs" />
+    <Compile Include="Services\Pdf\PdfParseSettings.cs" />
+    <Compile Include="Services\Pdf\PdfSourceLoader.cs" />
+    <Compile Include="Services\Pdf\PdfTemplateMapper.cs" />
+    <Compile Include="Services\Pdf\PdfTextToken.cs" />
+    <Compile Include="Utils\JsonHash.cs" />
+    <Compile Include="Utils\JsonValueNormalizer.cs" />
+    <Compile Include="Utils\TextNormalizer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Data\强制性产品认证车辆一致性证书.pdf" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -108,9 +130,7 @@
       <DependentUpon>Web.config</DependentUpon>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="App_Data\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

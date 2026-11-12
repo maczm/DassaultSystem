@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Text;
 using iTextSharp.text.pdf;
 
-namespace MOM.Services
+namespace MOM.Services.Pdf
 {
     /// <summary>
     /// 备用文字提取：当 iTextSharp 缺少 CJK 字体包、无法解码页面文字时，

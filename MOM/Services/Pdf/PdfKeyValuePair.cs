@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace MOM.Models
+namespace MOM.Services.Pdf
 {
     /// <summary>
     /// 解析结果中的一组“标签 -> 值”。
@@ -14,17 +14,5 @@ namespace MOM.Models
         /// <summary>字段值；没有值时为空字符串。</summary>
         [JsonProperty("value")]
         public string Value { get; set; }
-    }
-
-    /// <summary>
-    /// 解析失败时的返回结构。
-    /// </summary>
-    public class PdfParseError
-    {
-        [JsonProperty("code")]
-        public string Code { get; set; }
-
-        [JsonProperty("message")]
-        public string Message { get; set; }
     }
 }
